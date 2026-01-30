@@ -16,6 +16,27 @@
     
     <p>Tady je nastavení prostředí v Mosaiku: </p>
 
+    <!-- Vložení obrázku -->
     <img src="nastaveni.jpg" alt="Moje fotka" width="500">
+
+    
+    
+    <!-- vložení textu *.txt -->
+    
+    <h2>Obsah souboru:</h2>
+<pre id="obsah"></pre>
+
+<script>
+fetch('program.txt')
+  .then(response => response.text())
+  .then(data => {
+    document.getElementById('obsah').textContent = data;
+  })
+  .catch(error => {
+    document.getElementById('obsah').textContent = "Soubor se nepodařilo načíst.";
+  });
+</script>
+
+    
 </body>
 </html>

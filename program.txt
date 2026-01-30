@@ -1,0 +1,236 @@
+PROGRAM prgMain
+  VAR_INPUT
+  END_VAR
+  VAR_OUTPUT
+  END_VAR
+  VAR
+  leva:bool;				// promena leva typu bool
+  leva_R:R_trig;			// náběžná hrana proměnné leva typu R_TRIG
+
+  prava:bool;				// promena prava typu bool
+  prava_R:R_trig;			// náběžná hrana proměnné prava typu R_TRIG
+  tl1_R:R_trig;				// Náběžná hrana tlačítka tl1 typu R_TRIG
+  tl1_F:F_trig;				// Spádová hrana tlačítka tl1 typu F_TRIG
+
+  start:bool:=false;
+  pauza1:ton;				//pauzy typu TON
+  pauza2:ton;
+  pauza3:ton;
+  pauza4:ton;
+  pauza5:ton;
+  pauza6:ton;
+  pauza7:ton;
+  pauza7s:ton;
+  
+  hrana1:bool;				//proměnné k pauzám
+  hrana2:bool;
+  hrana3:bool;
+  hrana4:bool;
+  hrana5:bool;
+  hrana6:bool;
+  hrana7:bool;
+  
+  delka:dint:=0;			// proměnná pro délku, podívejte se na fotku nastavení je tam registr typu dint, proto dint
+  stav2:bool:=0;			// toto jsem nepoužil myslím
+  stav2_R:R_trig;			// toto jsem nepoužil myslím
+  faze:int:=0;
+
+  pom1:int:=0;				// toto jsem nepoužil myslím
+  pom2:bool:=0;				// toto jsem nepoužil myslím
+
+  END_VAR
+  VAR_TEMP
+  END_VAR
+
+  leva_R(CLK:=leva);			// detekce funkce R_trig náběžné hrany v programu pro proměnnou "leva"
+  prava_R(CLK:=prava);			// detekce funkce R_trig náběžné hrany v programu pro proměnnou "prava"
+
+// ----------------------------------------------nastavení bran do proměnných leva, prava -----------------------
+
+  if Leva_Brana > 2.2 then leva:=true; else leva:=false; end_if			//tohle by měl pochopit každý
+  if Prava_Brana > 2.2 then prava:=true; else prava:=false; end_if		//tohle by měl pochopit každý
+  
+  tl1_R(CLK:=tl1);			// definice náběžné hrany pro tlačítko tl1
+  tl1_F(CLK:=tl1);			// definice spádové hrany pro tlačítko tl1
+
+
+// ----------------------------------------------Začátek programu------------------------------------------------
+
+
+// -------------------------------------------červená se rozsvítí a hlídá se tlačítko------------------------------------------------
+
+  if not start then cervena:=1; end_if				// červená svítí než se stiskne tlačítko tl1
+  if tl1_R.Q and not start then					// když start = false hlídám náběžnou hranu tlačítka tl1
+
+// ----------------------------------------------prvotní nastavení jednotky na rychlý rozjezd--------------------------------------------
+
+  // Nastavení rampy
+  CisloPrikazu:= 9;			                       // Nastavení jednotky
+  Parametr1:=1;			                           // Nastavení pohybu 1-rychlý 0-pozvolný rozjezd
+  Rizeni.7:=not Rizeni.7;	                     // Zmenou bitu 7 na Rizeni se spustí príkaz
+  end_if
+
+// ----------------------------------------------když tlačítko od-máčkneme ------------------------------------------------
+
+  if tl1_F.Q and not start then			//když pustím tlačítko přijde jeho spádová hrana a 
+  start:=1;					// a na začátku programu je start = false potom projde tato podmínka a start se nastaví na true
+  cervena:=0;					// červená se zhasne, červená se zhasne
+  zluta:=1;					// žlutá se rozsvítí, žlutá se rozsvítí
+
+// ----------------------------------------------Rychlý rozjezd vpravo------------------------------------------------
+
+    // Rozjezd skokem vpravo
+  CisloPrikazu:= 105;                          // Jednotka - rozjezd zadanou rychlostí
+  Rizeni.6:= true;                             // Smer bude: Rizeni bit 6: vpravo - true, vlevo - false
+  Parametr1:= 5000;                            // Zadání rychlosti 4000 pulsu / sekundu
+  Rizeni.7:=not Rizeni.7;                      // Zmenou bitu 7 na Rizeni se spustí príkaz
+  end_if
+
+// ----------------------------------------------zastavení pohybu při dojezdu kuželky do pravé brány-------------------------------------
+  
+  // prava brana stop
+  if prava_R.q then				// tohle by už mohl také pochopit každý (náběžná hrana pravé brány = figurka je tam)
+  zluta:=0;					// žlutá zhasne, žlutá zhasne
+  CisloPrikazu:= 108;                          // Jednotka - Zastavení pohybu
+  Rizeni.7:=not Rizeni.7;                      // Zmenou bitu 7 na Rizeni se spustí príkaz
+  hrana1:=true;					// nastaví se hrana na true
+  end_if
+
+// ----------------------------------------------pauza 1------------------------------------------------
+  
+  pauza1(IN:=hrana1,PT:=T#5s);			// funkce TON hlídá hranu1 jakmile je true začne počítat 5 sekund a nastaví výstup na true
+
+// ----------------------------------------------nulování polohy v registru------------------------------------------------
+
+    if pauza1.q then				// když výstup funkce TON pauza1.q je nastaven na true tak
+    hrana1:=false;				// hrana1 nastavíme na false, aby podmínka už neproběhla
+    CisloPrikazu:= 15;                           // Jednotka - vynulovani polohy
+    Parametr1:=0;                                // Do Pozice zapiseme 0
+    Rizeni.7:=not Rizeni.7;                      // Zmenou bitu 7 na Rizeni se spustí príkaz
+    hrana2:=true;				// hrana2 true
+    end_if
+
+// ----------------------------------------------pauza 2------------------------------------------------
+
+  pauza2(IN:=hrana2,PT:=T#5s);			// když hrana2 true rozběhne se TON pauza2
+
+// ----------------------------------------------Rychlý rozjezd vlevo------------------------------------------------
+
+  if pauza2.q then
+  hrana2:=false;
+  cervena:=0;
+  zluta:=0;
+  zelena:=1;
+  // Rozjezd skokem vlevo
+  CisloPrikazu:= 105;                          // Jednotka - rozjezd zadanou rychlostí
+  Rizeni.6:= false;                            // Smer bude: Rizeni bit 6: vpravo - true, vlevo - false
+  Parametr1:= 5000;                            // Zadání rychlosti 4000 pulsu / sekundu
+  Rizeni.7:=not Rizeni.7;                      // Zmenou bitu 7 na Rizeni se spustí príkaz
+  end_if
+
+// -----------------------detekce kuželky v levé bráně a zápis délky jízdy (od pravé k levé bráně) do proměnné --------------------------------
+
+  // leva brana stop
+  if leva_R.q then
+  zelena:=0;
+  delka:=pozice;                               // Zapisu pozici do delka
+  CisloPrikazu:= 108;                          // Jednotka - Zastavení pohybu
+  Rizeni.7:=not Rizeni.7;                      // Zmenou bitu 7 na Rizeni se spustí príkaz
+  hrana3:=true;
+  end_if
+
+// ----------------------------------------------pauza 3------------------------------------------------
+  
+  pauza3(IN:=hrana3,PT:=T#5s);
+
+// ----------------------------------------------druhé nastavení jednotky pro pomalý rozjezd (tzv rampa)-------------------------------------
+
+  
+  if pauza3.q then
+// Nastavení rampy
+  hrana3:=0;
+  CisloPrikazu:= 9;			                       // Nastavení jednotky
+  Parametr1:=0;			                           // Nastavení pohybu 1-rychlý 0-pozvolný rozjezd
+  Rizeni.7:=not Rizeni.7;	                     // Zmenou bitu 7 na Rizeni se spustí príkaz
+  hrana4:=true;
+  end_if
+
+// ----------------------------------------------pauza 4------------------------------------------------
+
+  pauza4(IN:=hrana4,PT:=T#10s);
+
+// ----------------------------------------------Pojezd na 1 / 2 ------------------------------------------------
+
+  if pauza4.q then
+// Pomaly pojezd na 1/2
+  hrana4:=0;
+  CisloPrikazu:= 101;			                      // Nastavení jednotky na pojezd na zadanou polohu
+  Parametr1:=4000;			                        // Zadání rychlosti 4000 pulsu / sekundu
+  Parametr2:=delka/2;			                      // Zadání polohy
+  Rizeni.7:=not Rizeni.7;	                      // Zmenou bitu 7 na Rizeni se spustí príkaz
+  faze:=2;
+  end_if
+
+// ----------------------------------------------pauza 5------------------------------------------------
+
+// tady je podmínka hrana5:=stav.5 and (faze=2);, kdyby to tak nebylo napsané tak pokaždé když dosáhne dopravník
+// zadané polohy 1/2 nebo 3/4, nebo 1/4 tak se stav.5 nastaví na true a všechny TON pauza 5,6,7 by se najednou 
+// rozjely a po jejich čase by se nastavili jejich výstupy do jedné a v tu chvíly by všechny odstavce
+// běžely najednou nastavilo by se do jednotky za jeden cykl 3 nastavení jednotka by se zasekla, motorek by vrčel 
+// a nikam by jsme se nedostaly. 
+// takhle to je u každé další pauzy
+// pomalý rozjezd se může nastavit jen jednou jinak je simulovaná porucha a dopravník jede minimální rychlostí 20 p/s
+
+  hrana5:=stav.5 and (faze=2);		//stav.5 je bit registru, který hlídá jestli jednotka dojela na požadovanou pozici potom je true
+  pauza5(IN:=hrana5,PT:=T#7s);		// faze=2, hrana5 se nastaví na 1 když stav.5 = true a zároveň faze = 2
+  if pauza5.q then faze:=3;end_if	// při splnění fázi měním na faze = 3, aby nemohl TON pauza5 při příštím stav.5 začít zase odpočet
+
+// ----------------------------------------------pojezd na 3/4------------------------------------------------
+
+  if faze = 3 then
+  hrana5:=0; faze:=4;					// hrana5 hned do 0 a faze na 4 aby nemohl předchozí TON začít znovu
+// Pomaly pojezd na 3/4
+  CisloPrikazu:= 101;			                      // Nastavení jednotky na pojezd na zadanou polohu
+  Parametr1:=4000;			                        // Zadání rychlosti 4000 pulsu / sekundu
+  Parametr2:=delka*3/4;			                    // Zadání polohy
+  Rizeni.7:=not Rizeni.7;	                      // Zmenou bitu 7 na Rizeni se spustí príkaz
+  end_if
+
+// ----------------------------------------------pauza 6------------------------------------------------
+  
+  hrana6:=stav.5 and (faze=4);				// hrana6:= stav.5 and (faze=4)<------ <--------------------
+  pauza6(IN:=hrana6,PT:=T#7s);				// hrana6 true začíná TON pauza6      |			    |
+  if pauza6.q then faze:=5;end_if			// výstup pauza6.q dosažen, hned faze = 5 , aby podmínka hrana6 už neplatila
+
+// ----------------------------------------------pojezd na 1/4------------------------------------------------
+
+  if faze =5 then
+  hrana6:=0; faze:=6;
+// Pomaly pojezd na 1/4
+  CisloPrikazu:= 101;			                      // Nastavení jednotky na pojezd na zadanou polohu
+  Parametr1:=4000;			                        // Zadání rychlosti 4000 pulsu / sekundu
+  Parametr2:=delka*1/4;			                        // Zadání polohy
+  Rizeni.7:=not Rizeni.7;	                      // Zmenou bitu 7 na Rizeni se spustí príkaz
+  end_if
+
+// ----------------------------------------------pauza 7------------------------------------------------
+
+  hrana7:=stav.5 and (faze=6);				// stejne jako u předchozí pauzy
+  pauza7(IN:=hrana7,PT:=T#7s);
+  if pauza7.q then faze:=7;end_if
+
+// ----------------------------------------------resetování a start = false------------------------------------------------
+
+  if faze = 7 then
+  hrana7:=0;
+// Reset na zacatek
+  start:=false;					
+  faze:=0;					// start false a faze=0 tím se nahoře rozsvítí červené světlo a čeká se tlačítko
+
+//						//zde ještě přijde příkaz pro odpojení motoru to doplním až budu ve škole
+
+  end_if
+   
+
+
+END_PROGRAM

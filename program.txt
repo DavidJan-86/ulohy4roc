@@ -1,0 +1,174 @@
+PROGRAM prgMain
+  VAR_INPUT
+  END_VAR
+  VAR_OUTPUT
+  END_VAR
+  VAR
+  leva:bool;
+  leva_R:R_trig;
+  prava:bool;
+  prava_R:R_trig;
+  tl1_R:R_trig;
+  tl1_F:F_trig;
+
+  start:bool:=false;
+  pauza1:ton;
+  pauza2:ton;
+  pauza3:ton;
+  pauza4:ton;
+  pauza5:ton;
+  pauza6:ton;
+  pauza7:ton;
+  pauza7s:ton;
+  
+  hrana1:bool;
+  hrana2:bool;
+  hrana3:bool;
+  hrana4:bool;
+  hrana5:bool;
+  hrana6:bool;
+  hrana7:bool;
+  
+  delka:dint:=0;
+  stav2:bool:=0;
+  stav2_R:R_trig;
+  faze:int:=0;
+
+  pom1:int:=0;
+  pom2:bool:=0;
+
+  END_VAR
+  VAR_TEMP
+  END_VAR
+
+  leva_R(CLK:=leva);
+  prava_R(CLK:=prava);
+
+  if Leva_Brana > 2.2 then leva:=true; else leva:=false; end_if
+  if Prava_Brana > 2.2 then prava:=true; else prava:=false; end_if
+  
+  tl1_R(CLK:=tl1);
+  tl1_F(CLK:=tl1);
+
+  if not start then cervena:=1; end_if
+  if tl1_R.Q and not start then
+  // Nastavení rampy
+  CisloPrikazu:= 9;			                       // Nastavení jednotky
+  Parametr1:=1;			                           // Nastavení pohybu 1-rychlý 0-pozvolný rozjezd
+  Rizeni.7:=not Rizeni.7;	                     // Zmenou bitu 7 na Rizeni se spustí príkaz
+  end_if
+
+  if tl1_F.Q and not start then
+  start:=1;
+  cervena:=0;
+  zluta:=1;
+    // Rozjezd skokem vpravo
+  CisloPrikazu:= 105;                          // Jednotka - rozjezd zadanou rychlostí
+  Rizeni.6:= true;                             // Smer bude: Rizeni bit 6: vpravo - true, vlevo - false
+  Parametr1:= 5000;                            // Zadání rychlosti 4000 pulsu / sekundu
+  Rizeni.7:=not Rizeni.7;                      // Zmenou bitu 7 na Rizeni se spustí príkaz
+  end_if
+  
+  // prava brana stop
+  if prava_R.q then
+  zluta:=0;
+  CisloPrikazu:= 108;                          // Jednotka - Zastavení pohybu
+  Rizeni.7:=not Rizeni.7;                      // Zmenou bitu 7 na Rizeni se spustí príkaz
+  hrana1:=true;
+  end_if
+  
+  pauza1(IN:=hrana1,PT:=T#5s);
+
+    if pauza1.q then
+    hrana1:=false;
+    CisloPrikazu:= 15;                           // Jednotka - vynulovani polohy
+    Parametr1:=0;                                // Do Pozice zapiseme 0
+    Rizeni.7:=not Rizeni.7;                      // Zmenou bitu 7 na Rizeni se spustí príkaz
+    hrana2:=true;
+    end_if
+
+  pauza2(IN:=hrana2,PT:=T#5s);
+
+  if pauza2.q then
+  hrana2:=false;
+  cervena:=0;
+  zluta:=0;
+  zelena:=1;
+  // Rozjezd skokem vpravo
+  CisloPrikazu:= 105;                          // Jednotka - rozjezd zadanou rychlostí
+  Rizeni.6:= false;                            // Smer bude: Rizeni bit 6: vpravo - true, vlevo - false
+  Parametr1:= 5000;                            // Zadání rychlosti 4000 pulsu / sekundu
+  Rizeni.7:=not Rizeni.7;                      // Zmenou bitu 7 na Rizeni se spustí príkaz
+  end_if
+
+  // leva brana stop
+  if leva_R.q then
+  zelena:=0;
+  delka:=pozice;                               // Zapisu pozici do delka
+  CisloPrikazu:= 108;                          // Jednotka - Zastavení pohybu
+  Rizeni.7:=not Rizeni.7;                      // Zmenou bitu 7 na Rizeni se spustí príkaz
+  hrana3:=true;
+  end_if
+  
+  pauza3(IN:=hrana3,PT:=T#5s);
+  
+  if pauza3.q then
+// Nastavení rampy
+  hrana3:=0;
+  CisloPrikazu:= 9;			                       // Nastavení jednotky
+  Parametr1:=0;			                           // Nastavení pohybu 1-rychlý 0-pozvolný rozjezd
+  Rizeni.7:=not Rizeni.7;	                     // Zmenou bitu 7 na Rizeni se spustí príkaz
+  hrana4:=true;
+  end_if
+
+  pauza4(IN:=hrana4,PT:=T#10s);
+
+  if pauza4.q then
+// Pomaly pojezd na 1/2
+  hrana4:=0;
+  CisloPrikazu:= 101;			                      // Nastavení jednotky na pojezd na zadanou polohu
+  Parametr1:=4000;			                        // Zadání rychlosti 4000 pulsu / sekundu
+  Parametr2:=delka/2;			                      // Zadání polohy
+  Rizeni.7:=not Rizeni.7;	                      // Zmenou bitu 7 na Rizeni se spustí príkaz
+  faze:=2;
+  end_if
+
+  hrana5:=stav.5 and (faze=2);
+  pauza5(IN:=hrana5,PT:=T#7s);
+  if pauza5.q then faze:=3;end_if
+
+  if faze = 3 then
+  hrana5:=0; faze:=4;
+// Pomaly pojezd na 3/4
+  CisloPrikazu:= 101;			                      // Nastavení jednotky na pojezd na zadanou polohu
+  Parametr1:=4000;			                        // Zadání rychlosti 4000 pulsu / sekundu
+  Parametr2:=delka*3/4;			                    // Zadání polohy
+  Rizeni.7:=not Rizeni.7;	                      // Zmenou bitu 7 na Rizeni se spustí príkaz
+  end_if
+  
+  hrana6:=stav.5 and (faze=4);
+  pauza6(IN:=hrana6,PT:=T#7s);
+  if pauza6.q then faze:=5;end_if
+
+  if faze =5 then
+  hrana6:=0; faze:=6;
+// Pomaly pojezd na 1/4
+  CisloPrikazu:= 101;			                      // Nastavení jednotky na pojezd na zadanou polohu
+  Parametr1:=4000;			                        // Zadání rychlosti 4000 pulsu / sekundu
+  Parametr2:=delka*1/4;			                        // Zadání polohy
+  Rizeni.7:=not Rizeni.7;	                      // Zmenou bitu 7 na Rizeni se spustí príkaz
+  end_if
+
+  hrana7:=stav.5 and (faze=6);
+  pauza7(IN:=hrana7,PT:=T#7s);
+  if pauza7.q then faze:=7;end_if
+
+  if faze = 7 then
+  hrana7:=0;
+// Reset na zacatek
+  start:=false;
+  faze:=0;
+  end_if
+   
+
+END_PROGRAM

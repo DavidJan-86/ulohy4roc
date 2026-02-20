@@ -2,41 +2,92 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <title>Moje stránka</title>
+    <title>Úlohy pro 4. ročník</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 40px;
+        }
+
+        .menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            transition: 0.2s;
+        }
+
+        .item:hover {
+            transform: scale(1.03);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
+
+        .item img {
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .item p {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <h1>Vítejte na mé stránce</h1>
-    <p>Na těchto stránkách budu postupně přidávat řešení úloh a jejich vysvětlení.</p>
-    <p>Níže je úloha Dopravník s Krokovým Motorem. </p>
-    <p>Zatím má dvě části: Nastavení a podtím je program. </p>
-    <p>Program jsem napsal minulý týden a vyzkoušel. Funguje správně. </p>
-    <p>Projděte si to a kdyby někdo měl dotaz napište do mailu, </p>
-    <p>budu na dotazy v mailu průběžně odpovídat. </p>
-    
-    
-    <p>Tady je nastavení prostředí v Mosaiku: </p>
 
-    <!-- Vložení obrázku -->
-    <img src="nastaveni.jpg" alt="Moje fotka" width="500">
+<h1>Úlohy pro 4. ročník</h1>
 
-    
-    
-    <!-- vložení textu *.txt -->
-    
-    <h2>Obsah souboru:</h2>
-<pre id="obsah"></pre>
+<div class="menu">
+    <a class="item" href="tema1.html">
+        <img src="img/tema1.jpg" alt="Téma 1">
+        <p>Téma 1 – Síťové technologie</p>
+    </a>
 
-<script>
-fetch('program.txt')
-  .then(response => response.text())
-  .then(data => {
-    document.getElementById('obsah').textContent = data;
-  })
-  .catch(error => {
-    document.getElementById('obsah').textContent = "Soubor se nepodařilo načíst.";
-  });
-</script>
+    <a class="item" href="tema2.html">
+        <img src="img/tema2.jpg" alt="Téma 2">
+        <p>Téma 2 – Programování</p>
+    </a>
 
-    
+    <a class="item" href="tema3.html">
+        <img src="img/tema3.jpg" alt="Téma 3">
+        <p>Téma 3 – Hardware</p>
+    </a>
+
+    <a class="item" href="tema4.html">
+        <img src="img/tema4.jpg" alt="Téma 4">
+        <p>Téma 4 – Operační systémy</p>
+    </a>
+
+    <a class="item" href="tema5.html">
+        <img src="img/tema5.jpg" alt="Téma 5">
+        <p>Téma 5 – Databáze</p>
+    </a>
+
+    <a class="item" href="tema6.html">
+        <img src="img/tema6.jpg" alt="Téma 6">
+        <p>Téma 6 – Bezpečnost</p>
+    </a>
+
+    <a class="item" href="tema7.html">
+        <img src="img/tema7.jpg" alt="Téma 7">
+        <p>Téma 7 – Maturitní příklady</p>
+    </a>
+</div>
+
 </body>
 </html>

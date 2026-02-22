@@ -1,1 +1,33 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Moje stránka</title>
+</head>
+<body>
+    <p>Tady je nastavení prostředí v Mosaiku: </p>
 
+    <!-- Vložení obrázku -->
+    <img src="nastaveni3.jpg" alt="Moje fotka" width="500">
+
+    
+    
+    <!-- vložení textu *.txt -->
+    
+    <h2>Obsah souboru:</h2>
+<pre id="obsah"></pre>
+
+<script>
+fetch('program3.txt')
+  .then(response => response.text())
+  .then(data => {
+    document.getElementById('obsah').textContent = data;
+  })
+  .catch(error => {
+    document.getElementById('obsah').textContent = "Soubor se nepodařilo načíst.";
+  });
+</script>
+
+    
+</body>
+</html>

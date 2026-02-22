@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Moje stránka</title>
+
+    <!-- Anti-cache pro HTML automaticke obnovení stránky pro uživatele při změně stránky programátorem--> 
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"> 
+    <meta http-equiv="Pragma" content="no-cache"> 
+    <meta http-equiv="Expires" content="0">
+    
 </head>
 <body>
     <p>Tady je nastavení prostředí v Mosaiku: </p>
@@ -35,7 +41,7 @@
 <pre id="obsah"></pre>
 
 <script>
-fetch('program3.txt')
+fetch('program3.txt?v=1')
   .then(response => response.text())
   .then(data => {
     document.getElementById('obsah').textContent = data;

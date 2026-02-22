@@ -1,0 +1,166 @@
+Program1 pro zjištění vzdálenosti
+
+//RobotSvakuovChapTest2New
+
+//Zde pouzijeme DO4=pohyb0 (nahoru), DO5=pohyb1 (dolu), DI8=start0, DI9=start1, DI5=KVerti,
+// DI0 a DI1 = IRC rozsah vertikalniho vstupu 0 az 3400 "nad ridici deskou"
+
+
+PROGRAM prgMain
+
+        VAR
+          cisloA1:UDINT;
+	  KS2:BOOL;//nacita se do nej stav koncoveho spinace
+        END_VAR
+//enkodery
+//zadat u CNT_OUT1 v poli CCNT ridiciSlovo1 (UINT) a u CNT_IN1 v poli VALA hodnotaA1 (UDINT)
+//zadat IRC u IB1301 - bity 0 a 1
+	ridiciSlovo1:=1;// EN=1 (beh povolen)
+        cisloA1:=hodnotaA1;//nahoru/dolu ... bity 0 a 1 IB1301
+//koncove spinace
+	KS2:=KVerti;//koncovy spinac vertikalni osy
+//akční členy
+        pohyb0:=start0;//nahoru
+        pohyb1:=start1;//dolu
+END_PROGRAM
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+Program2 pro ROBOTA S VAKUOVÝM CHAPADLEM kompletní program:
+
+
+//RobotSvakuovChapTest3
+//Pohyby se pouzitim tlacitka start2 na DI10 zopakuji.
+
+//I4 a I1 8 b pro ovládání akcních clenu
+//I2 - 4 b enkodéry vertikální a horizontální osa, X100.0 až X100.3
+//I0 - 2 b enkodér rotace, X10.0 a X10.1
+//I3 - 3 b koncové spínace
+//O1 a O2 8 b licna, 3 motory/2 smery, 1 motor/ 1 smer a 1 solen. ventil
+//O0 - vystup DO0 ... sig ... signalizace moznosti opakovani
+
+//Zde pouzijeme DO5=pohyb1 (dolu), DO4=pohyb0 (nahoru), DI8=start0, DI9=start1, DI5=KVerti, DI0 a DI1=IRC
+//rozsah vstupu: polRotac 0 až 7450,
+//polVertik 0 az 3400 "nad ridici deskou" polHoriz 0 až 4900. Tlacitko na DI10 (start2) - opakovani.
+//vystup DO0 ... sig ... signalizace moznosti opakovani
+
+FUNCTION NaPolohu:BOOL // deklarace funkce
+ VAR_INPUT
+  polVertik:UDINT; // vstupní promenné
+ END_VAR
+ IF hodnotaA1>polVertik AND (hodnotaA1-polVertik)>50 THEN pohyb0:=TRUE;pohyb1:=FALSE;//jedu nahoru
+  ELSIF hodnotaA1<polVertik AND (polVertik-hodnotaA1)>50 THEN pohyb1:=TRUE;pohyb0:=FALSE;//dolu
+  ELSE pohyb0:=FALSE; pohyb1:=FALSE;
+ END_IF;
+ IF (NOT pohyb0 AND NOT pohyb1) = TRUE THEN
+  NaPolohu:=TRUE;
+   ELSE NaPolohu:=FALSE;
+ END_IF;
+//jsme na zadane poloze... motory vypináme chvili pred dosazenim zadane polohy
+END_FUNCTION
+
+
+PROGRAM prgMain
+        VAR
+           	 cisloA1:UDINT;
+	         KS2:BOOL;
+	         Start:BOOL:=TRUE;
+	         Pom0,Pom1,Pom2,Pom3,Pom4,Pom5,Pom6,Pom7,Pom8,Pom9:BOOL;
+	         Vys0,Vys1,Vys2,Vys3,Vys4,Vys5,Vys6,Vys7,Vys8:BOOL;
+	         NaPolohu0,NaPolohu1,NaPolohu2,NaPolohu3:BOOL;
+	         polVertik0,polVertik1,polVertik2,polVertik3:UDINT;
+	         Casovac0,Casovac1,Casovac2,Casovac3:TON;
+	         Cas0,Cas1,Cas2,Cas3:TIME;
+	         NabHrPom0,NabHrVys1,NabHrVys3,NabHrVys5,NabHrVys7:R_TRIG;
+	         max:UDINT:=3400;//dolni krajni poloha
+        END_VAR
+//enkodery
+//zadat u CNT_OUT1 v poli CCNT ridiciSlovo1 (UINT) a u CNT_IN1 v poli VALA hodnotaA1 (UDINT),
+//zadat IRC u IB1301 - bity 0 a 1
+        cisloA1:=hodnotaA1;//nahoru/dolu ... bity 0 a 1 IB1301
+//koncove spinace
+	KS2:=KVerti;//koncovy spinac vertikalni osy
+//akcni cleny
+        pohyb0:=start0;//nahoru
+        pohyb1:=start1;//dolu
+
+IF Start=TRUE THEN
+  IF KS2=FALSE THEN pohyb0:=TRUE;//rameno nahoru
+   ELSE pohyb0:=FALSE;Start:=FALSE;Pom0:=TRUE;
+  END_IF;
+END_IF;
+NabHrPom0(CLK:=Pom0,Q=>Vys0);
+IF Vys0=TRUE THEN
+	ridiciSlovo1:=2;
+	Pom1:=TRUE;
+	Pom0:=FALSE;
+END_IF;
+Casovac0(IN:=Pom1,PT:=T#3s,Q=>Vys1,ET=>Cas0);
+NabHrVys1(CLK:=Vys1,Q=>Vys2);
+IF Vys2=TRUE THEN
+	ridiciSlovo1:=1;
+	polVertik0:=max;
+	Pom1:=FALSE;
+	Pom2:=TRUE;
+END_IF;	
+IF Pom2=TRUE THEN
+	NaPolohu0:=NaPolohu(polVertik0);
+	IF NaPolohu0=TRUE THEN
+		Pom2:=FALSE;
+		Pom3:=TRUE;
+	END_IF;
+END_IF;
+Casovac1(IN:=Pom3,PT:=T#15s,Q=>Vys3,ET=>Cas1);
+NabHrVys3(CLK:=Vys3,Q=>Vys4);
+IF Vys4=TRUE THEN
+	polVertik1:=max/4;
+	Pom3:=FALSE;
+	Pom4:=TRUE;
+END_IF;	
+IF Pom4=TRUE THEN
+	NaPolohu1:=NaPolohu(polVertik1);
+	IF NaPolohu1=TRUE THEN
+		Pom4:=FALSE;
+		Pom5:=TRUE;
+	END_IF;
+END_IF;
+Casovac2(IN:=Pom5,PT:=T#10s,Q=>Vys5,ET=>Cas2);
+NabHrVys5(CLK:=Vys5,Q=>Vys6);
+IF Vys6=TRUE THEN
+	polVertik2:=max*3/4;
+	Pom5:=FALSE;
+	Pom6:=TRUE;
+END_IF;	
+IF Pom6=TRUE THEN
+	NaPolohu2:=NaPolohu(polVertik2);
+	IF NaPolohu2=TRUE THEN
+		Pom6:=FALSE;
+		Pom7:=TRUE;
+	END_IF;
+END_IF;
+Casovac3(IN:=Pom7,PT:=T#7s,Q=>Vys7,ET=>Cas3);
+NabHrVys7(CLK:=Vys7,Q=>Vys8);
+IF Vys8=TRUE THEN
+	polVertik3:=max/2;
+	Pom7:=FALSE;
+	Pom8:=TRUE;
+END_IF;	
+IF Pom8=TRUE THEN
+	NaPolohu3:=NaPolohu(polVertik3);
+	IF NaPolohu3=TRUE THEN
+		Pom8:=FALSE;
+		Pom9:=TRUE;
+	END_IF;
+END_IF;
+IF Pom9=TRUE THEN
+	sig:=TRUE;
+	IF start2=TRUE THEN
+	  Pom9:=FALSE;
+	  Start:=TRUE;
+	  sig:=FALSE;
+	END_IF;
+END_IF;
+END_PROGRAM
